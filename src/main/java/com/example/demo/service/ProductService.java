@@ -13,7 +13,7 @@ public class ProductService {
         this.productRepository = productRepository;
     }
 
-    @Transactional(timeout = 15)
+    @Transactional(timeout = 5)
     public void eatTime() {
         productRepository.getTimeEaterZero();
     }
