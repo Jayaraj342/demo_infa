@@ -7,7 +7,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Entity
-public class Product extends BaseModel {
+public class Item extends BaseModel {
     private String name;
     private double price;
     private int quantity;
