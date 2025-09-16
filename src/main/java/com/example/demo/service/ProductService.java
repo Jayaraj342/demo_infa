@@ -2,7 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.repository.ProductRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+//import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ProductService {
@@ -13,7 +13,7 @@ public class ProductService {
         this.productRepository = productRepository;
     }
 
-    @Transactional(timeout = 5)
+//    @Transactional(timeout = 10)
     public void eatTime() {
         productRepository.getTimeEaterZero();
     }
