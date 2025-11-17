@@ -8,13 +8,14 @@ items:
         app: saas-service
       name: saas-service
     spec:
+      type: LoadBalancer
+      selector:
+        app: saas
       ports:
         - name: http
-          port: 80
+          port: 8080
           targetPort: 8080
-      selector:
-        app: saas-service
-      type: ClusterIP
+          nodePort: 30000
   - apiVersion: v1
     kind: ServiceAccount
     metadata:
