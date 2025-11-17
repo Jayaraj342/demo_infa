@@ -1,36 +1,66 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: demo
-  labels:
-    app: demo
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: demo
-  template:
+apiVersion: v1
+kind: List
+items:
+  - apiVersion: v1
+    kind: Service
     metadata:
       labels:
-        app: demo
+        app: saas-service
+      name: saas-service
     spec:
-      containers:
-        - name: demo
-          image: demo:latest
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 8080
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: demo-service
-spec:
-  type: NodePort
-  selector:
-    app: demo
-  ports:
-    - protocol: "TCP"
-      port: 8080
-      targetPort: 8080
-      nodePort: 30000
+      ports:
+        - name: http
+          port: 80
+          targetPort: 8080
+      selector:
+        app: saas-service
+      type: ClusterIP
+  - apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      labels:
+        app: saas-acc
+      name: saas-acc
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      labels:
+        app: saas-acc
+      name: saas-acc:view
+    roleRef:
+      kind: Role
+      apiGroup: rbac.authorization.k8s.io
+      name: namespace-reader
+    subjects:
+      - kind: ServiceAccount
+        name: saas-acc
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      namespace: default
+      name: namespace-reader
+    rules:
+      - apiGroups: ["", "extensions", "apps"]
+        resources: ["configmaps", "pods", "services", "endpoints", "secrets"]
+        verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: saas
+    spec:
+      replicas: 2
+      selector:
+        matchLabels:
+          app: saas
+      template:
+        metadata:
+          labels:
+            app: saas
+        spec:
+          serviceAccountName: saas-acc
+          containers:
+            - name: saas
+              image: demo:latest
+              imagePullPolicy: IfNotPresent
+              ports:
+                - containerPort: 8080

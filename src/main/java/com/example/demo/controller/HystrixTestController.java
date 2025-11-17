@@ -28,7 +28,7 @@ public class HystrixTestController {
 
     @GetMapping("/hystrix")
     public String hystrix() {
-        return "hystrix";
+        return "hystrix1";
     }
 
     @GetMapping("/hystrix/test")
