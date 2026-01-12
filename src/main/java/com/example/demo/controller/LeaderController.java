@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.kubernetes.commons.EnvReader;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.ResponseEntity;
 import org.springframework.integration.leader.Context;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @RestController
@@ -36,6 +39,9 @@ public class LeaderController {
      */
     @GetMapping("/")
     public String getInfo() {
+        System.out.println("==========================> " + EnvReader.getEnv("HOSTNAME"));// pod identifier
+        System.out.println("==========================> " + EnvReader.getEnv("KUBERNETES_SERVICE_HOST"));// cluster ip of service api (10.96.0.1) => pod -> kube proxy (cluster ip -> control plane ip) -> server api
+
         if (this.context == null) {
             return String.format("I am '%s' but I am not a leader of the '%s'", this.host, this.role);
         }
@@ -43,13 +49,23 @@ public class LeaderController {
         return String.format("I am '%s' and I am the leader of the '%s'", this.host, this.role);
     }
 
-    @Scheduled(fixedDelay = 5, timeUnit = TimeUnit.SECONDS)
+    // TODO : remove
+    // Retain references so GC cannot collect them
+    private final List<byte[]> leak = new ArrayList<>();
+
+//    @Scheduled(fixedDelay = 5, timeUnit = TimeUnit.SECONDS)
     public void printInfo() {
         if (this.context == null) {
-            System.out.printf("I am '%s' but I am not a leader of the '%s'%n", this.host, this.role);
+            System.out.printf("---I am '%s' but I am not a leader of the '%s'%n", this.host, this.role);
         } else {
-            System.out.printf("I am '%s' and I am the leader of the '%s'%n", this.host, this.role);
+            System.out.printf("---I am '%s' and I am the leader of the '%s'%n", this.host, this.role);
         }
+
+//        while (true) {
+//            // Allocate 10MB blocks repeatedly
+//            leak.add(new byte[10 * 1024 * 1024]);
+//            System.out.println("========================================================================== Runtime.getRuntime().freeMemory() : " + Runtime.getRuntime().freeMemory());
+//        }
     }
 
     /**

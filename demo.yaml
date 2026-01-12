@@ -65,3 +65,8 @@ items:
               imagePullPolicy: IfNotPresent
               ports:
                 - containerPort: 8080
+                - containerPort: 5005
+                  name: debug-port
+              env:
+                - name: JAVA_TOOL_OPTIONS
+                  value: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"

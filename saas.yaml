@@ -1,0 +1,114 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: services-db
+spec:
+  ports:
+    - protocol: TCP
+      port: 3307 # The port the service will listen on internally
+      targetPort: 3307 # The port the external DB container is listening on
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: services-db # Must match the Service name exactly
+subsets:
+  - addresses:
+      - ip: 10.65.174.93 # VM ip address
+    ports:
+      - port: 3307 # The port the external DB container is listening on
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: saas-db
+spec:
+  ports:
+    - protocol: TCP
+      port: 3307 # The port the service will listen on internally
+      targetPort: 3307 # The port the external DB container is listening on
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: saas-db # Must match the Service name exactly
+subsets:
+  - addresses:
+      - ip: 10.65.174.93 # VM ip address
+    ports:
+      - port: 3306 # The port the external DB container is listening on
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-saas
+  labels:
+    app: k8s-saas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8s-saas
+  template:
+    metadata:
+      labels:
+        app: k8s-saas
+    spec:
+      containers:
+        - name: k8s-saas
+          image: icsdev/saas:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: JPDA_ADDRESS
+              value: "8000"
+          volumeMounts:
+            # --- Security Certs/Config Mounts ---
+            # NOTE: Update the 'hostPath.path' values to match your local system paths where ${CHEF_DIR}, etc., resolve to.
+            - name: root-truststore
+              mountPath: /etc/ssl/infaca/truststore.jks
+            - name: root-ca-bundle
+              mountPath: /etc/ssl/infaca/ca-bundle.pem
+            - name: saas-keystore
+              mountPath: /etc/ssl/infaca/keystore.jks
+            - name: saas-bundle
+              mountPath: /etc/ssl/infaca/saas-bundle.pem
+            - name: saas-key
+              mountPath: /etc/ssl/infaca/saas-key.pem
+      volumes:
+        # Volume definitions for hostPath mounts
+        - name: root-truststore
+          hostPath:
+            path: /security/root/root-truststore.jks
+            type: File
+        - name: root-ca-bundle
+          hostPath:
+            path: /security/root/root-ca-bundle.pem
+            type: File
+        - name: saas-keystore
+          hostPath:
+            path: /security/certs/saas/saas-keystore.jks
+            type: File
+        - name: saas-bundle
+          hostPath:
+            path: /security/certs/saas/saas-bundle.pem
+            type: File
+        - name: saas-key
+          hostPath:
+            path: /security/certs/saas/saas-key.pem
+            type: File
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8s-saas-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: k8s-saas
+  ports:
+    - protocol: "TCP"
+      port: 16180
+      targetPort: 16180
+      nodePort: 30000
