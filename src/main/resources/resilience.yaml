@@ -1,0 +1,50 @@
+resilience4j:
+  circuitbreaker:
+    instances:
+      saas:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 100
+        minimumNumberOfCalls: 20
+        failureRateThreshold: 60
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 10
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        ignoreExceptions: com.example.exceptions.BusinessException
+        recordExceptions: java.io.IOException
+
+  bulkhead:
+    instances:
+      saas:
+        maxConcurrentCalls: 20
+        maxWaitDuration: 100ms
+      ccgfsearch:
+        maxConcurrentCalls: 2
+
+  threadpool_bulkhead:
+    instances:
+      saas:
+        coreThreadPoolSize: 10
+        maxThreadPoolSize: 20
+        queueCapacity: 50
+        keepAliveDuration: 60s
+      edcsearch:
+        coreThreadPoolSize: 10
+        maxThreadPoolSize: 10
+        queueCapacity: 0
+
+  timelimiter:
+    instances:
+      saas:
+        timeoutDuration: 2s
+        cancelRunningFuture: true
+      ccgfsearch:
+        timeoutDuration: 2s
+        cancelRunningFuture: true
+
+  retry:
+    instances:
+      ccgfsearch:
+        maxAttempts: 3
+        waitDuration: 1s
+        retryExceptions: ['java.util.concurrent.TimeoutException']
+        retryExceptionPredicate: com.example.demo.resiliencetemp.exception.DefaultRetryPredicate
